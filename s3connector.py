@@ -1,12 +1,14 @@
 import os
 import sys
 import boto
+import uuid
 import pandas as pd
+from datetime import datetime
 from boto.s3.key import Key
 from boto.s3.connection import Bucket
 
 
-def aws_key_retrieve(file_loc):
+def aws_key_retrieve_local(file_loc):
     """
     Retrieve the keys from the credentials file that Amazon provides through IAM
     :param file_loc: location of credentials file
@@ -21,11 +23,28 @@ def aws_key_retrieve(file_loc):
     return user_name, access_key_id, secret_key_id
 
 
-def s3_upload(aws_access_key, aws_secret_key, dataframe, s3_bucket, key,
-              content_type=None, validate=True, callback=None, reduced_redundancy=False, md5=None):
+def file_name_standardizer(file_mask, version, uuid_use=False):
+    """
+    Standardize the file name for upload to S3
+    :param file_mask: type of data (ex: btq, btq_prep)
+    :param version: version of the code generating the file (ex: v3_1)
+    :param uuid: optional uuid to prevent file collision (example: threading)
+    :return: the file name as a str
+    """
+    current_dt = datetime.utcnow()
+    dt_string = current_dt.strftime('%Y%m%d_%H%M%S')
+    if uuid_use:
+        new_uuid = str(uuid.uuid4())
+        return file_mask + '_' + version + '_' + dt_string + '_' + new_uuid
+    else:
+        return file_mask + '_' + version + '_' + dt_string
+
+
+def s3_dataframe_upload(aws_access_key, aws_secret_key, dataframe, s3_bucket, s3_path, s3_file_name,
+                        content_type=None, validate=True, callback=None, reduced_redundancy=False, md5=None):
 
     # Convert the dataframe to an in-memory string tsv
-    data = dataframe.to_csv(None, sep='\t', encoding='utf-8', index=False, header=None)
+    data = dataframe.to_csv(None, sep='|', encoding='utf-8', index=False, header=True)
     # get the size of the string to ensure that all data transferred to S3.
     file_size = sys.getsizeof(data)
 
@@ -35,8 +54,9 @@ def s3_upload(aws_access_key, aws_secret_key, dataframe, s3_bucket, key,
         # get the bucket
         bucket = conn.get_bucket(s3_bucket, validate=validate)
         # get the key for the bucket
+        s_path = os.path.join(s3_path, s3_file_name)
         k = Key(bucket)
-        k.key = key
+        k.key = s_path
         if content_type:
             k.set_metadata('Content-Type', content_type)
         # send the data
@@ -67,8 +87,6 @@ def s3_file_cleaner(aws_access_key, aws_secret_key, s3_bucket, filepath):
     assert success, "Deletion of bucket %s failed." % s3_bucket
     return success
 
-
-user, access, secret = aws_key_retrieve('Documents/credentials.csv')
 
 
 
