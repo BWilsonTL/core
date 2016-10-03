@@ -28,7 +28,7 @@ def file_name_standardizer(file_mask, version, uuid_use=False):
     Standardize the file name for upload to S3
     :param file_mask: type of data (ex: btq, btq_prep)
     :param version: version of the code generating the file (ex: v3_1)
-    :param uuid: optional uuid to prevent file collision (example: threading)
+    :param uuid_use: optional uuid to prevent file collision (example: threading)
     :return: the file name as a str
     """
     current_dt = datetime.utcnow()
