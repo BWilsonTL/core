@@ -19,6 +19,9 @@ def binning(dataframe, source_field, output_field, label_list, bin_define=None, 
             if len(bin_define) != len(label_list) + 1:
                 raise ValueError('Defined numeric bin level count must be one higher than labels count.')
             else:
+                frame_max = dataframe[source_field].max()
+                if bin_define[-1] != frame_max:
+                    bin_define[-1] = frame_max
                 dataframe[output_field] = pd.cut(x=dataframe[source_field], bins=bin_define, labels=label_list)
         else:
             bin_count = len(label_list) + 1
