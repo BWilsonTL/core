@@ -18,7 +18,7 @@ def account_details(directory_loc):
 
 
 class SnowConnect(object):
-    def __init__(self, query, username, password, account='ruelala', ijson=False):
+    def __init__(self, query, username, password, database, schema, role, warehouse, account='ruelala', ijson=False):
         """
         Snowflake connection handler for batch queries
         :param query: block str of the query
@@ -30,6 +30,10 @@ class SnowConnect(object):
         self.query = query
         self.user = username
         self.pwd = password
+        self.database = database
+        self.schema = schema
+        self.role = role
+        self.warehouse = warehouse
         self.act = account
         self.ijson = ijson
 
@@ -41,7 +45,11 @@ class SnowConnect(object):
         conn = snowflake.connector.connect(
             user=self.user,
             password=self.pwd,
-            account=self.act
+            account=self.act,
+            database=self.database,
+            schema=self.schema,
+            role=self.role,
+            warehouse=self.warehouse
         )
         cs = conn.cursor()
         col_list = list()
