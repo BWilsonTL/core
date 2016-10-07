@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 
 def _is_categorical(df, field):
     """
@@ -55,6 +55,7 @@ def basis_expansion(dataframe, expansion_field, replace=True, sort_flag=False, o
                 field_name = str(expansion_field) + '_' + str(uniques[i])
                 dataframe.loc[dataframe[expansion_field] == uniques[i], field_name] = 1
                 dataframe[field_name].fillna(0, inplace=True)
+                dataframe[field_name] = dataframe[field_name].astype(np.int)
             if replace:
                 dataframe.drop([expansion_field], inplace=True, axis=1)
             return dataframe
