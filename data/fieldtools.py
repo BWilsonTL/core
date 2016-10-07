@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from core.data import frameformatting
 import string
-
+import math
 
 def bin_generator(element_count):
     """
@@ -12,6 +12,28 @@ def bin_generator(element_count):
     """
     bin_list = list(string.ascii_uppercase + string.ascii_lowercase)
     return bin_list[:element_count]
+
+
+def auto_bins(dataframe, field, n_bins):
+    """
+    Function for calculating bin limits based on percentiles of the data series of the frame.
+    :param dataframe: source dataframe
+    :param field: field of interest
+    :param n_bins: the number of bins that are going to be created.
+    :return: full range of bins (returned count will be n_bins + 1 to capture full ranges)
+    """
+    df_type = dataframe[field].dtype
+    if df_type == float or df_type == int:
+        series = dataframe[field]
+        bins = []
+        quants = math.floor(100 / n_bins)
+        for i in range(n_bins):
+            quan = int(quants * i)
+            bins.append(np.percentile(series, quan))
+        bins.append(dataframe[field].max())
+        return bins
+    else:
+        raise TypeError('Frame field must be either int or float to calculate bin ranges')
 
 
 def binning(dataframe, source_field, output_field, label_list, bin_define=None, del_check=False, bin_scale='lin'):
@@ -38,8 +60,14 @@ def binning(dataframe, source_field, output_field, label_list, bin_define=None, 
                 dataframe[output_field] = pd.cut(x=dataframe[source_field], bins=bin_define, labels=label_list)
         else:
             bin_count = len(label_list) + 1
-            bin_space = np.linspace(start=dataframe[source_field].min(), stop=dataframe[source_field].max(),
-                                    num=bin_count)
+            if bin_scale == 'lin':
+                bin_space = np.linspace(start=dataframe[source_field].min(), stop=dataframe[source_field].max(),
+                                        num=bin_count)
+            elif bin_scale == 'auto':
+                bin_space = auto_bins(dataframe, source_field, bin_count - 1)
+            else:
+                bin_space = np.logspace(start=np.log10(dataframe[source_field].min()),
+                                        stop=np.log10(dataframe[source_field].max()), num=bin_count)
             dataframe[output_field] = pd.cut(x=dataframe[source_field], bins=bin_space, labels=label_list)
         if del_check:
             dataframe.drop(source_field, axis=1, inplace=True)
@@ -49,7 +77,7 @@ def binning(dataframe, source_field, output_field, label_list, bin_define=None, 
                         (source_field, source_dtype))
 
 
-def bin_expansion(dataframe, source_field, expansion_bins, bin_ranges=None, source_del=True):
+def bin_expansion(dataframe, source_field, expansion_bins, bin_ranges=None, source_del=True, bin_scale='lin'):
     """
     Roll up both binning and basis expansion in a single function call
     :param dataframe: source dataframe object
@@ -57,10 +85,11 @@ def bin_expansion(dataframe, source_field, expansion_bins, bin_ranges=None, sour
     :param expansion_bins: a list of bin names to use for binning and basis expansion
     :param bin_ranges: list of int / float for setting the binning ranges (optional)
     :param source_del: bool check to delete the source field and the binning field.
+    :param bin_scale: binning scaling (lin / log)
     :return: data frame with new frames created.
     """
     bin_field = source_field + '_bin'
-    binning(dataframe, source_field, bin_field, expansion_bins, bin_ranges, del_check=source_del)
+    binning(dataframe, source_field, bin_field, expansion_bins, bin_ranges, del_check=source_del, bin_scale=bin_scale)
     frameformatting.basis_expansion(dataframe, bin_field, replace=source_del)
     return dataframe
 

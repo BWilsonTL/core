@@ -26,15 +26,25 @@ def df_field_fill_clean(df, fields, replace_missing_val=None):
     :return: a copy of the original dataframe.
     """
     df_new = df.copy()
-    for idx, field in enumerate(fields):
-        field_type = df_type_check(df[field])
+    if type(fields) == list:
+        for idx, field in enumerate(fields):
+            field_type = df_type_check(df[field])
+            if replace_missing_val:
+                if field_type == type(replace_missing_val):
+                    df_new[field].fillna(replace_missing_val, inplace=True)
+                else:
+                    raise TypeError('Frame field incorrect type for target replacement value.')
+            if field_type == str:
+                df_new[field] = df_new[field].str.upper()
+    elif type(fields) == str:
+        field_type = df_type_check(df[fields])
         if replace_missing_val:
             if field_type == type(replace_missing_val):
-                df_new[field].fillna(replace_missing_val, inplace=True)
+                df_new[fields].fillna(replace_missing_val, inplace=True)
             else:
                 raise TypeError('Frame field incorrect type for target replacement value.')
-        if field_type == str:
-            df_new[field] = df_new[field].str.upper()
+    else:
+        raise ValueError('Field names must be passed in as either a str or a list of str.')
     return df_new
 
 
