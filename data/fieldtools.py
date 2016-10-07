@@ -4,6 +4,7 @@ from core.data import frameformatting
 import string
 import math
 
+
 def bin_generator(element_count):
     """
     function to build an alpha-based bin naming convention
@@ -12,6 +13,19 @@ def bin_generator(element_count):
     """
     bin_list = list(string.ascii_uppercase + string.ascii_lowercase)
     return bin_list[:element_count]
+
+
+def unique_list_gen(check_list):
+    """
+    Returns a unique list since pd.cut will fail in binning if the bins are not unique.
+    :param check_list: list of int or float
+    :return: a unique list
+    """
+    unique_list = []
+    for a in check_list:
+        if a not in unique_list:
+            unique_list.append(a)
+    return unique_list
 
 
 def auto_bins(dataframe, field, n_bins):
@@ -31,7 +45,7 @@ def auto_bins(dataframe, field, n_bins):
             quan = int(quants * i)
             bins.append(np.percentile(series, quan))
         bins.append(dataframe[field].max())
-        return bins
+        return unique_list_gen(bins)
     else:
         raise TypeError('Frame field must be either int or float to calculate bin ranges')
 
