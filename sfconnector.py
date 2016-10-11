@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 import snowflake.connector
 import pandas as pd
+from core.settings import settings_config as sc
 
 
 def account_details(directory_loc):
@@ -18,18 +19,20 @@ def account_details(directory_loc):
 
 
 class SnowConnect(object):
-    def __init__(self, query, username, password, database, schema, role, warehouse, account='ruelala', ijson=False):
+    def __init__(self, query, database, schema, role, warehouse, account='ruelala', ijson=False):
         """
         Snowflake connection handler for batch queries
         :param query: block str of the query
-        :param username: snowflake username
-        :param password: snowflake password
+        :param database: database to connect to
+        :param schema: schema to use on snowflake
+        :param role: the role to execute the query in
+        :param warehouse: the warehouse to use on snowflake
         :param account: snowflake account (default: ruelala)
         :param ijson: for bulk queries that will run into memory issues, set to True (will slow down query)
         """
+        environment = sc.EnvironmentConfig()
+        self.user, self.pwd = environment.get_snowflake_conn()
         self.query = query
-        self.user = username
-        self.pwd = password
         self.database = database
         self.schema = schema
         self.role = role

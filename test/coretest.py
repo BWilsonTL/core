@@ -14,7 +14,10 @@ class FormatterTest(unittest.TestCase):
     def setUp(self):
         pass
 
-    test_frame = pd.DataFrame([[1, 1.3, 'A', None], [2, 2.3, 'B', 4]], columns=['int', 'float', 'str', 'NaN'])
+    test_frame = pd.DataFrame([[1, 1.3, 'A', None],
+                               [2, 2.3, 'B', 4],
+                              [None, None, 'C', 6]],
+                              columns=['int', 'float', 'str', 'NaN'])
 
     def test_catTest(self):
         self.assertFalse(ff._is_categorical(self.test_frame, 'str'))

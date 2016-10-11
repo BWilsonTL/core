@@ -17,7 +17,7 @@ def df_type_check(df_field):
         return df_field.dtype
 
 
-def df_field_fill_clean(df, fields, replace_missing_val=None):
+def df_field_fill_clean(df, fields, replace_missing_val):
     """
     Fills a field with a replacement value, uppercases strings if fields are string type.
     :param df: pandas dataframe object
@@ -29,20 +29,18 @@ def df_field_fill_clean(df, fields, replace_missing_val=None):
     if type(fields) == list:
         for idx, field in enumerate(fields):
             field_type = df_type_check(df[field])
-            if replace_missing_val:
-                if field_type == type(replace_missing_val):
-                    df_new[field].fillna(replace_missing_val, inplace=True)
-                else:
-                    raise TypeError('Frame field incorrect type for target replacement value.')
+            if field_type == type(replace_missing_val):
+                df_new[field].fillna(replace_missing_val, inplace=True)
+            else:
+                raise TypeError('Frame field incorrect type for target replacement value.')
             if field_type == str:
                 df_new[field] = df_new[field].str.upper()
     elif type(fields) == str:
         field_type = df_type_check(df[fields])
-        if replace_missing_val:
-            if field_type == type(replace_missing_val):
-                df_new[fields].fillna(replace_missing_val, inplace=True)
-            else:
-                raise TypeError('Frame field incorrect type for target replacement value.')
+        if field_type == type(replace_missing_val):
+            df_new[fields].fillna(replace_missing_val, inplace=True)
+        else:
+            raise TypeError('Frame field incorrect type for target replacement value.')
     else:
         raise ValueError('Field names must be passed in as either a str or a list of str.')
     return df_new
